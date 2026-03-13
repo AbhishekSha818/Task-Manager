@@ -4,6 +4,21 @@ A production-ready task management mobile application built with **Expo React Na
 
 ---
 
+## 📥 Download
+
+[![Download APK](https://img.shields.io/badge/Download-APK%20v1.0.0-brightgreen?style=for-the-badge&logo=android)](https://github.com/AbhishekSha818/Task-Manager/releases/download/v1.0.0/TaskManager-v1.0.0.apk)
+[![GitHub Release](https://img.shields.io/github/v/release/AbhishekSha818/Task-Manager?style=for-the-badge&logo=github)](https://github.com/AbhishekSha818/Task-Manager/releases/latest)
+
+### Android Installation
+1. Tap the **Download APK** button above
+2. On your Android device, go to **Settings → Security → Enable "Install unknown apps"**
+3. Open the downloaded `TaskManager-v1.0.0.apk` and tap **Install**
+4. Launch **Task Manager** from your app drawer
+
+> **Requirements:** Android 7.0+ (API level 24 or higher)
+
+---
+
 ## 📋 Project Structure
 
 ```
