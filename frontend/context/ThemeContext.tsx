@@ -6,6 +6,7 @@ interface ThemeContextType {
   isDark: boolean;
   toggleTheme: () => Promise<void>;
   colors: typeof COLORS.light | typeof COLORS.dark;
+  themeLoaded: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -13,6 +14,7 @@ const THEME_KEY = 'appTheme';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDark, setIsDark] = useState(false);
+  const [themeLoaded, setThemeLoaded] = useState(false);
 
   // Load stored theme
   useEffect(() => {
@@ -22,6 +24,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (saved) setIsDark(JSON.parse(saved));
       } catch (error) {
         console.error('Failed to load theme:', error);
+      } finally {
+        setThemeLoaded(true);
       }
     };
     loadTheme();
@@ -39,7 +43,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme, colors }}>
+    <ThemeContext.Provider value={{ isDark, toggleTheme, colors, themeLoaded }}>
       {children}
     </ThemeContext.Provider>
   );

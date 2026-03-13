@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
@@ -16,7 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/api';
 
 export default function RegisterScreen() {
-  const { colors } = useTheme();
+  const { colors, themeLoaded } = useTheme();
   const { login } = useAuth();
   const router = useRouter();
 
@@ -118,6 +119,15 @@ export default function RegisterScreen() {
       setLoading(false);
     }
   };
+
+  // Don't render form until theme is loaded to prevent layout shift
+  if (!themeLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
