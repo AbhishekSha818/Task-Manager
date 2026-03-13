@@ -66,3 +66,7 @@ DELETE /api/tasks/:id
 ```
 
 All task routes require `Authorization: Bearer <token>` header.
+
+---
+
+Thanks for checking out this project. If you found it useful, feel free to star the repo!
