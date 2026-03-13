@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,6 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/api';
-import { INPUT_STYLES, getInputStyle } from '../../constants/inputStyles';
 
 export default function LoginScreen() {
   const { colors, themeLoaded } = useTheme();
@@ -24,26 +23,12 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const emailInputRef = useRef(null);
-  const passwordInputRef = useRef(null);
-
-  // Memoize input styles with theme colors
-  const emailInputStyle = useMemo(
-    () => getInputStyle(INPUT_STYLES.singleLine, colors, 12),
-    [colors]
-  );
-
-  const passwordInputStyle = useMemo(
-    () => getInputStyle(INPUT_STYLES.singleLine, colors, 20),
-    [colors]
-  );
 
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-
     setLoading(true);
     try {
       const response = await authService.login(email, password);
@@ -56,7 +41,6 @@ export default function LoginScreen() {
     }
   };
 
-  // Don't render form until theme is loaded to prevent layout shift
   if (!themeLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
@@ -64,6 +48,19 @@ export default function LoginScreen() {
       </View>
     );
   }
+
+  const inputStyle = {
+    height: 48,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 0,
+    fontSize: 15,
+    color: colors.text,
+    marginBottom: 14,
+  };
 
   return (
     <KeyboardAvoidingView
@@ -74,36 +71,34 @@ export default function LoginScreen() {
         contentContainerStyle={{
           flexGrow: 1,
           justifyContent: 'center',
-          alignItems: Platform.OS === 'web' ? 'center' : 'stretch',
+          alignItems: 'center',
           backgroundColor: colors.background,
+          padding: 20,
         }}
         showsVerticalScrollIndicator={false}
       >
         <View
           style={{
-            width: Platform.OS === 'web' ? 400 : '100%',
-            padding: 24,
-            justifyContent: 'center',
+            width: '100%',
+            maxWidth: 400,
+            padding: 28,
             backgroundColor: colors.background,
-            borderWidth: Platform.OS === 'web' ? 1 : 0,
+            borderWidth: 1,
             borderColor: colors.border,
-            borderRadius: 12,
-            marginHorizontal: Platform.OS === 'web' ? 20 : 0,
-            ...(Platform.OS === 'web' && {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-              elevation: 8,
-            }),
+            borderRadius: 16,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 4,
           }}
         >
           <Text
             style={{
-              fontSize: 32,
+              fontSize: 30,
               fontWeight: 'bold',
               color: colors.primary,
-              marginBottom: 10,
+              marginBottom: 8,
               textAlign: 'center',
             }}
           >
@@ -112,77 +107,64 @@ export default function LoginScreen() {
 
           <Text
             style={{
-              fontSize: 16,
+              fontSize: 15,
               color: colors.text,
-              opacity: 0.7,
-              marginBottom: 30,
+              opacity: 0.6,
+              marginBottom: 28,
               textAlign: 'center',
             }}
           >
             Welcome back!
           </Text>
 
+          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 6, opacity: 0.7 }}>
+            Email
+          </Text>
           <TextInput
-            ref={emailInputRef}
-            placeholder="Email"
-            placeholderTextColor={colors.text + '80'}
+            placeholder="you@example.com"
+            placeholderTextColor={colors.text + '55'}
             value={email}
             onChangeText={setEmail}
-            style={emailInputStyle}
-            keyboardType="email-address"
+            style={inputStyle}
+            keyboardType="default"
+            autoCapitalize="none"
             editable={!loading}
-            autoComplete="off"
           />
 
+          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 6, opacity: 0.7 }}>
+            Password
+          </Text>
           <TextInput
-            ref={passwordInputRef}
-            placeholder="Password"
-            placeholderTextColor={colors.text + '80'}
+            placeholder="••••••••"
+            placeholderTextColor={colors.text + '55'}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            style={passwordInputStyle}
+            style={{ ...inputStyle, marginBottom: 22 }}
             editable={!loading}
-            autoComplete="off"
           />
 
           <TouchableOpacity
             onPress={handleLogin}
             disabled={loading}
             style={{
-              backgroundColor: loading ? colors.primary + '80' : colors.primary,
+              backgroundColor: loading ? colors.primary + '88' : colors.primary,
               borderRadius: 8,
-              padding: 14,
-              marginBottom: 15,
+              height: 48,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 16,
             }}
           >
-            <Text
-              style={{
-                color: '#FFFFFF',
-                fontSize: 16,
-                fontWeight: '600',
-                textAlign: 'center',
-              }}
-            >
+            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700' }}>
               {loading ? 'Logging in...' : 'Login'}
             </Text>
           </TouchableOpacity>
 
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ color: colors.text, fontSize: 14 }}>Don't have an account? </Text>
-            <TouchableOpacity
-              disabled={loading}
-              onPress={() => router.push('/(auth)/register')}
-            >
-              <Text
-                style={{
-                  color: colors.primary,
-                  fontSize: 14,
-                  fontWeight: '600',
-                }}
-              >
-                Sign up
-              </Text>
+            <Text style={{ color: colors.text, fontSize: 14, opacity: 0.7 }}>Don't have an account? </Text>
+            <TouchableOpacity disabled={loading} onPress={() => router.push('/(auth)/register')}>
+              <Text style={{ color: colors.primary, fontSize: 14, fontWeight: '700' }}>Sign up</Text>
             </TouchableOpacity>
           </View>
         </View>
