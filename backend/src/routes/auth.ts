@@ -12,7 +12,7 @@ router.post('/register', validateRegister, handleValidationErrors, async (req: R
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
+      return res.status(409).json({ error: 'Email already registered' });
     }
 
     const user = new User({ email, username, password });
@@ -36,12 +36,12 @@ router.post('/login', validateLogin, handleValidationErrors, async (req: Request
 
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(404).json({ error: 'No account found with this email' });
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Incorrect password' });
     }
 
     const token = generateToken(user._id.toString());

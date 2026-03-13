@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -23,53 +22,41 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [errorType, setErrorType] = useState<'user_not_found' | 'wrong_password' | 'general' | ''>('');
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+    setErrorMessage('');
+    setErrorType('');
+
+    if (!email.trim() || !password.trim()) {
+      setErrorMessage('Please fill in all fields');
+      setErrorType('general');
       return;
     }
+
     setLoading(true);
-    console.log('[Login] Attempting login with email:', email);
     try {
       const response = await authService.login(email, password);
-      console.log('[Login] Login successful, setting auth context');
       await login(response.token, response.user);
       router.replace('/(app)/home');
     } catch (error: any) {
-      console.error('[Login] Login error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-
-      // Parse error response and show context-aware message
       const status = error.response?.status;
-      const errorData = error.response?.data;
-      let alertTitle = 'Login Failed';
-      let alertMessage = 'Invalid credentials';
+      const msg: string = error.response?.data?.error ?? '';
 
-      if (status === 404 || errorData?.error?.includes('not found')) {
-        alertMessage = "This email isn't registered. Would you like to create an account?";
-        alertTitle = 'User Not Found';
-      } else if (status === 401 || errorData?.error?.includes('password')) {
-        alertMessage = 'The password you entered is incorrect. Please try again.';
-        alertTitle = 'Wrong Password';
+      if (status === 404 || msg.toLowerCase().includes('no account') || msg.toLowerCase().includes('not found')) {
+        setErrorType('user_not_found');
+        setErrorMessage('No account found with this email. Please sign up first.');
+      } else if (status === 401 || msg.toLowerCase().includes('incorrect password') || msg.toLowerCase().includes('password')) {
+        setErrorType('wrong_password');
+        setErrorMessage('Incorrect password. Please try again.');
       } else if (status === 500) {
-        alertMessage = 'Server error. Please try again later.';
-        alertTitle = 'Server Error';
-      } else if (errorData?.error) {
-        alertMessage = errorData.error;
+        setErrorType('general');
+        setErrorMessage('Server error. Please try again later.');
+      } else {
+        setErrorType('general');
+        setErrorMessage(msg || 'Login failed. Please try again.');
       }
-
-      Alert.alert(alertTitle, alertMessage, [
-        { text: 'Dismiss', style: 'default' },
-        alertTitle === 'User Not Found'
-          ? {
-              text: 'Sign Up',
-              onPress: () => router.push('/(auth)/register'),
-            }
-          : null,
-      ].filter(Boolean) as any);
     } finally {
       setLoading(false);
     }
@@ -127,29 +114,40 @@ export default function LoginScreen() {
             elevation: 4,
           }}
         >
-          <Text
-            style={{
-              fontSize: 30,
-              fontWeight: 'bold',
-              color: colors.primary,
-              marginBottom: 8,
-              textAlign: 'center',
-            }}
-          >
+          <Text style={{ fontSize: 30, fontWeight: 'bold', color: colors.primary, marginBottom: 8, textAlign: 'center' }}>
             Task Manager
           </Text>
-
-          <Text
-            style={{
-              fontSize: 15,
-              color: colors.text,
-              opacity: 0.6,
-              marginBottom: 28,
-              textAlign: 'center',
-            }}
-          >
+          <Text style={{ fontSize: 15, color: colors.text, opacity: 0.6, marginBottom: 28, textAlign: 'center' }}>
             Welcome back!
           </Text>
+
+          {/* Inline error banner */}
+          {errorMessage !== '' && (
+            <View
+              style={{
+                backgroundColor: colors.error + '18',
+                borderWidth: 1,
+                borderColor: colors.error + '60',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 16,
+              }}
+            >
+              <Text style={{ color: colors.error, fontSize: 14, fontWeight: '600', marginBottom: 2 }}>
+                {errorType === 'user_not_found' && 'Account not found'}
+                {errorType === 'wrong_password' && 'Wrong password'}
+                {errorType === 'general' && 'Login failed'}
+              </Text>
+              <Text style={{ color: colors.error, fontSize: 13, opacity: 0.9 }}>{errorMessage}</Text>
+              {errorType === 'user_not_found' && (
+                <TouchableOpacity onPress={() => router.push('/(auth)/register')} style={{ marginTop: 8 }}>
+                  <Text style={{ color: colors.primary, fontSize: 13, fontWeight: '700' }}>
+                    Create an account →
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
 
           <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 6, opacity: 0.7 }}>
             Email
@@ -158,7 +156,7 @@ export default function LoginScreen() {
             placeholder="you@example.com"
             placeholderTextColor={colors.text + '55'}
             value={email}
-            onChangeText={setEmail}
+            onChangeText={v => { setEmail(v); setErrorMessage(''); setErrorType(''); }}
             style={inputStyle}
             keyboardType="default"
             autoCapitalize="none"
@@ -172,7 +170,7 @@ export default function LoginScreen() {
             placeholder="••••••••"
             placeholderTextColor={colors.text + '55'}
             value={password}
-            onChangeText={setPassword}
+            onChangeText={v => { setPassword(v); setErrorMessage(''); setErrorType(''); }}
             secureTextEntry
             style={{ ...inputStyle, marginBottom: 22 }}
             editable={!loading}
