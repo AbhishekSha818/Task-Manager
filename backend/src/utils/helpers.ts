@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 
 // Simple password hashing with crypto
 export const hashPassword = async (password: string): Promise<string> => {
@@ -15,9 +15,10 @@ export const comparePassword = async (password: string, hashedPassword: string):
 };
 
 export const generateToken = (userId: string): string => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || 'secret', {
-    expiresIn: process.env.JWT_EXPIRE || '7d',
-  });
+  const options: SignOptions = {
+    expiresIn: (process.env.JWT_EXPIRE as any) || '7d',
+  };
+  return jwt.sign({ userId }, process.env.JWT_SECRET || 'secret', options);
 };
 
 export const verifyToken = (token: string): string | null => {
