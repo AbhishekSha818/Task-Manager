@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   Alert,
   SafeAreaView,
+  TextInput,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
@@ -15,6 +16,8 @@ import { Task } from '../../types';
 import { TaskCard } from '../../components/TaskCard';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { useDebounce } from '../../hooks/useDebounce';
+import { TaskStatsCard } from '../../components/TaskStatsCard';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -24,6 +27,8 @@ export default function HomeScreen() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const statuses = ['All', 'Pending', 'In Progress', 'Completed'];
 
@@ -32,7 +37,9 @@ export default function HomeScreen() {
       setLoading(true);
       const data = await taskService.getTasks(selectedStatus === 'All' ? undefined : selectedStatus);
       setTasks(data);
+      console.log('[HomeScreen] Tasks loaded:', data.length);
     } catch (error) {
+      console.error('[HomeScreen] Failed to load tasks:', error);
       Alert.alert('Error', 'Failed to load tasks');
     } finally {
       setLoading(false);
@@ -45,6 +52,19 @@ export default function HomeScreen() {
     }, [selectedStatus])
   );
 
+  // Filter tasks based on search query (client-side filtering)
+  const filteredTasks = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) {
+      return tasks;
+    }
+
+    const query = debouncedSearchQuery.toLowerCase();
+    return tasks.filter(task =>
+      task.title.toLowerCase().includes(query) ||
+      task.description?.toLowerCase().includes(query)
+    );
+  }, [tasks, debouncedSearchQuery]);
+
   const handleDeleteTask = async (id: string) => {
     Alert.alert('Delete Task', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
@@ -55,7 +75,9 @@ export default function HomeScreen() {
           try {
             await taskService.deleteTask(id);
             setTasks(tasks.filter(t => t._id !== id));
+            console.log('[HomeScreen] Task deleted:', id);
           } catch (error) {
+            console.error('[HomeScreen] Failed to delete task:', error);
             Alert.alert('Error', 'Failed to delete task');
           }
         },
@@ -81,6 +103,18 @@ export default function HomeScreen() {
     return <LoadingSpinner />;
   }
 
+  const searchInputStyle = {
+    height: 40,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: colors.text,
+    marginBottom: 16,
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ padding: 20, backgroundColor: colors.background, flex: 1 }}>
@@ -103,19 +137,37 @@ export default function HomeScreen() {
                 padding: 10,
                 backgroundColor: colors.error + '20',
                 borderRadius: 8,
+                flexDirection: 'row',
+                gap: 6,
+                alignItems: 'center',
               }}
             >
               <Text style={{ color: colors.error, fontSize: 18 }}>🚪</Text>
+              <Text style={{ color: colors.error, fontSize: 12, fontWeight: '600' }}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* Task Statistics Card */}
+        <TaskStatsCard tasks={tasks} />
+
+        {/* Search Bar */}
+        <TextInput
+          placeholder="Search tasks..."
+          placeholderTextColor={colors.text + '55'}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          style={searchInputStyle}
+        />
+
         {/* Status Filter */}
-        <View style={{ flexDirection: 'row', marginBottom: 20, gap: 8 }}>
+        <View style={{ flexDirection: 'row', marginBottom: 16, gap: 8 }}>
           {statuses.map((status) => (
             <TouchableOpacity
               key={status}
-              onPress={() => setSelectedStatus(status)}
+              onPress={() => {
+                setSelectedStatus(status);
+              }}
               style={{
                 paddingHorizontal: 14,
                 paddingVertical: 8,
@@ -140,18 +192,18 @@ export default function HomeScreen() {
         </View>
 
         {/* Task List */}
-        {tasks.length === 0 ? (
+        {filteredTasks.length === 0 ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ fontSize: 18, color: colors.text, opacity: 0.6 }}>
-              No tasks yet
+              {debouncedSearchQuery.trim() ? 'No tasks found' : 'No tasks yet'}
             </Text>
             <Text style={{ fontSize: 14, color: colors.text, opacity: 0.4, marginTop: 5 }}>
-              Create one to get started!
+              {debouncedSearchQuery.trim() ? 'Try a different search' : 'Create one to get started!'}
             </Text>
           </View>
         ) : (
           <FlatList
-            data={tasks}
+            data={filteredTasks}
             keyExtractor={(item) => item._id}
             renderItem={({ item }) => (
               <TaskCard
@@ -175,7 +227,7 @@ export default function HomeScreen() {
             height: 60,
             justifyContent: 'center',
             alignItems: 'center',
-            marginTop: 20,
+            marginTop: 16,
             alignSelf: 'center',
           }}
         >

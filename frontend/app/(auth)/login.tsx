@@ -30,12 +30,46 @@ export default function LoginScreen() {
       return;
     }
     setLoading(true);
+    console.log('[Login] Attempting login with email:', email);
     try {
       const response = await authService.login(email, password);
+      console.log('[Login] Login successful, setting auth context');
       await login(response.token, response.user);
       router.replace('/(app)/home');
     } catch (error: any) {
-      Alert.alert('Login Failed', error.response?.data?.error || 'Invalid credentials');
+      console.error('[Login] Login error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      // Parse error response and show context-aware message
+      const status = error.response?.status;
+      const errorData = error.response?.data;
+      let alertTitle = 'Login Failed';
+      let alertMessage = 'Invalid credentials';
+
+      if (status === 404 || errorData?.error?.includes('not found')) {
+        alertMessage = "This email isn't registered. Would you like to create an account?";
+        alertTitle = 'User Not Found';
+      } else if (status === 401 || errorData?.error?.includes('password')) {
+        alertMessage = 'The password you entered is incorrect. Please try again.';
+        alertTitle = 'Wrong Password';
+      } else if (status === 500) {
+        alertMessage = 'Server error. Please try again later.';
+        alertTitle = 'Server Error';
+      } else if (errorData?.error) {
+        alertMessage = errorData.error;
+      }
+
+      Alert.alert(alertTitle, alertMessage, [
+        { text: 'Dismiss', style: 'default' },
+        alertTitle === 'User Not Found'
+          ? {
+              text: 'Sign Up',
+              onPress: () => router.push('/(auth)/register'),
+            }
+          : null,
+      ].filter(Boolean) as any);
     } finally {
       setLoading(false);
     }

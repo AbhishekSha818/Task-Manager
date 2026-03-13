@@ -1,0 +1,31 @@
+/* Global styles to fix React Native Web TextInput issues on web */
+
+/* Fix for TextInput component styling on web */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[type="url"] {
+  box-sizing: border-box !important;
+  -webkit-box-sizing: border-box !important;
+}
+
+/* Prevent browser auto-fill from overriding our styles */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Remove focus outline and use border instead */
+input:focus {
+  outline: none !important;
+}
+
+/* Ensure consistent height and sizing */
+textarea,
+input {
+  font-family: inherit !important;
+}

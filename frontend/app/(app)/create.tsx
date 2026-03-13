@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { taskService } from '../../services/api';
-import { INPUT_STYLES, getInputStyle } from '../../constants/inputStyles';
 
 export default function CreateTaskScreen() {
   const { colors } = useTheme();
@@ -22,16 +21,31 @@ export default function CreateTaskScreen() {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Memoize input styles with theme colors
-  const titleInputStyle = useMemo(
-    () => getInputStyle(INPUT_STYLES.singleLine, colors, 15),
-    [colors]
-  );
+  const inputStyle = {
+    height: 48,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 0,
+    fontSize: 15,
+    color: colors.text,
+    marginBottom: 14,
+  };
 
-  const descriptionInputStyle = useMemo(
-    () => getInputStyle(INPUT_STYLES.multiLine, colors, 20),
-    [colors]
-  );
+  const descriptionInputStyle = {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: colors.text,
+    marginBottom: 14,
+    minHeight: 100,
+  };
 
   const handleCreate = async () => {
     if (!title.trim()) {
@@ -40,12 +54,27 @@ export default function CreateTaskScreen() {
     }
 
     setLoading(true);
+    console.log('[CreateTask] Starting task creation with title:', title);
     try {
-      await taskService.createTask(title, description || undefined);
-      Alert.alert('Success', 'Task created successfully');
+      console.log('[CreateTask] Calling API with:', { title, description: description || 'none' });
+      const result = await taskService.createTask(title, description || undefined);
+      console.log('[CreateTask] API Response:', result);
+      Alert.alert('Success', 'Task created successfully!');
+      console.log('[CreateTask] Alert shown, calling router.back()');
       router.back();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error || 'Failed to create task');
+      console.error('[CreateTask] Error occurred:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+      });
+      const errorMessage = 
+        error.response?.data?.error || 
+        error.response?.data?.message || 
+        error.message || 
+        'Failed to create task';
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -70,19 +99,25 @@ export default function CreateTaskScreen() {
             </TouchableOpacity>
           </View>
 
+          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 6, opacity: 0.7 }}>
+            Title
+          </Text>
           <TextInput
             placeholder="Task Title"
-            placeholderTextColor={colors.text + '80'}
+            placeholderTextColor={colors.text + '55'}
             value={title}
             onChangeText={setTitle}
-            style={titleInputStyle}
+            style={inputStyle}
             editable={!loading}
             autoComplete="off"
           />
 
+          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 6, opacity: 0.7 }}>
+            Description (optional)
+          </Text>
           <TextInput
-            placeholder="Description (optional)"
-            placeholderTextColor={colors.text + '80'}
+            placeholder="Add task details..."
+            placeholderTextColor={colors.text + '55'}
             value={description}
             onChangeText={setDescription}
             multiline

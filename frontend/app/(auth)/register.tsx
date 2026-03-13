@@ -40,12 +40,46 @@ export default function RegisterScreen() {
       return;
     }
     setLoading(true);
+    console.log('[Register] Attempting registration with email:', email);
     try {
       const response = await authService.register(email, username, password);
+      console.log('[Register] Registration successful, setting auth context');
       await login(response.token, response.user);
       router.replace('/(app)/home');
     } catch (error: any) {
-      Alert.alert('Registration Failed', error.response?.data?.error || 'Something went wrong');
+      console.error('[Register] Registration error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      // Parse error response and show context-aware message
+      const status = error.response?.status;
+      const errorData = error.response?.data;
+      let alertTitle = 'Registration Failed';
+      let alertMessage = 'Something went wrong';
+
+      if (status === 409 || errorData?.error?.includes('already')) {
+        alertMessage = "This email is already registered. Please log in instead.";
+        alertTitle = 'Email Already Exists';
+      } else if (status === 400) {
+        alertMessage = errorData?.error || 'Invalid email or username format';
+        alertTitle = 'Invalid Input';
+      } else if (status === 500) {
+        alertMessage = 'Server error. Please try again later.';
+        alertTitle = 'Server Error';
+      } else if (errorData?.error) {
+        alertMessage = errorData.error;
+      }
+
+      Alert.alert(alertTitle, alertMessage, [
+        { text: 'Dismiss', style: 'default' },
+        alertTitle === 'Email Already Exists'
+          ? {
+              text: 'Login',
+              onPress: () => router.push('/(auth)/login'),
+            }
+          : null,
+      ].filter(Boolean) as any);
     } finally {
       setLoading(false);
     }
