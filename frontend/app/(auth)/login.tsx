@@ -24,6 +24,39 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Memoize TextInput styles to prevent re-render shrinking
+  const emailInputStyle = useMemo(
+    () => ({
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: 12,
+      minHeight: 44,
+      width: '100%' as const,
+      marginBottom: 12,
+      color: colors.text,
+      fontSize: 14,
+    }),
+    [colors]
+  );
+
+  const passwordInputStyle = useMemo(
+    () => ({
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: 12,
+      minHeight: 44,
+      width: '100%' as const,
+      marginBottom: 20,
+      color: colors.text,
+      fontSize: 14,
+    }),
+    [colors]
+  );
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -104,18 +137,7 @@ export default function LoginScreen() {
             placeholderTextColor={colors.text + '80'}
             value={email}
             onChangeText={setEmail}
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 8,
-              padding: 12,
-              minHeight: 44,
-              width: '100%',
-              marginBottom: 12,
-              color: colors.text,
-              fontSize: 14,
-            }}
+            style={emailInputStyle}
             keyboardType="email-address"
             editable={!loading}
           />
@@ -126,18 +148,7 @@ export default function LoginScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 8,
-              padding: 12,
-              minHeight: 44,
-              width: '100%',
-              marginBottom: 20,
-              color: colors.text,
-              fontSize: 14,
-            }}
+            style={passwordInputStyle}
             editable={!loading}
           />
 

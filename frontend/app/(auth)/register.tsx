@@ -26,6 +26,71 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Memoize TextInput styles to prevent re-render shrinking
+  const emailInputStyle = useMemo(
+    () => ({
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: 12,
+      minHeight: 44,
+      width: '100%' as const,
+      marginBottom: 12,
+      color: colors.text,
+      fontSize: 14,
+    }),
+    [colors]
+  );
+
+  const usernameInputStyle = useMemo(
+    () => ({
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: 12,
+      minHeight: 44,
+      width: '100%' as const,
+      marginBottom: 12,
+      color: colors.text,
+      fontSize: 14,
+    }),
+    [colors]
+  );
+
+  const passwordInputStyle = useMemo(
+    () => ({
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: 12,
+      minHeight: 44,
+      width: '100%' as const,
+      marginBottom: 12,
+      color: colors.text,
+      fontSize: 14,
+    }),
+    [colors]
+  );
+
+  const confirmPasswordInputStyle = useMemo(
+    () => ({
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: 12,
+      minHeight: 44,
+      width: '100%' as const,
+      marginBottom: 20,
+      color: colors.text,
+      fontSize: 14,
+    }),
+    [colors]
+  );
+
   const handleRegister = async () => {
     if (!email || !username || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -116,18 +181,7 @@ export default function RegisterScreen() {
             placeholderTextColor={colors.text + '80'}
             value={email}
             onChangeText={setEmail}
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 8,
-              padding: 12,
-              minHeight: 44,
-              width: '100%',
-              marginBottom: 12,
-              color: colors.text,
-              fontSize: 14,
-            }}
+            style={emailInputStyle}
             keyboardType="email-address"
             editable={!loading}
           />
@@ -137,18 +191,7 @@ export default function RegisterScreen() {
             placeholderTextColor={colors.text + '80'}
             value={username}
             onChangeText={setUsername}
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 8,
-              padding: 12,
-              minHeight: 44,
-              width: '100%',
-              marginBottom: 12,
-              color: colors.text,
-              fontSize: 14,
-            }}
+            style={usernameInputStyle}
             editable={!loading}
           />
 
@@ -158,18 +201,7 @@ export default function RegisterScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 8,
-              padding: 12,
-              minHeight: 44,
-              width: '100%',
-              marginBottom: 12,
-              color: colors.text,
-              fontSize: 14,
-            }}
+            style={passwordInputStyle}
             editable={!loading}
           />
 
@@ -179,18 +211,7 @@ export default function RegisterScreen() {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 8,
-              padding: 12,
-              minHeight: 44,
-              width: '100%',
-              marginBottom: 20,
-              color: colors.text,
-              fontSize: 14,
-            }}
+            style={confirmPasswordInputStyle}
             editable={!loading}
           />
 
