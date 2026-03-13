@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Alert,
   SafeAreaView,
   TextInput,
+  Platform,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
@@ -18,6 +19,21 @@ import { ThemeToggle } from '../../components/ThemeToggle';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useDebounce } from '../../hooks/useDebounce';
 import { TaskStatsCard } from '../../components/TaskStatsCard';
+
+// Cross-platform confirm helper.
+// On web, Alert.alert callbacks are not invoked (browser alert has no buttons),
+// so we fall back to window.confirm() which works synchronously.
+function confirmAction(title: string, message: string, onConfirm: () => void) {
+  if (Platform.OS === 'web') {
+    const ok = (window as any).confirm(`${title}\n\n${message}`);
+    if (ok) onConfirm();
+  } else {
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Confirm', style: 'destructive', onPress: onConfirm },
+    ]);
+  }
+}
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -52,51 +68,40 @@ export default function HomeScreen() {
     }, [selectedStatus])
   );
 
-  // Filter tasks based on search query (client-side filtering)
+  // Client-side filtering based on debounced search query
   const filteredTasks = useMemo(() => {
-    if (!debouncedSearchQuery.trim()) {
-      return tasks;
-    }
-
+    if (!debouncedSearchQuery.trim()) return tasks;
     const query = debouncedSearchQuery.toLowerCase();
-    return tasks.filter(task =>
-      task.title.toLowerCase().includes(query) ||
-      task.description?.toLowerCase().includes(query)
+    return tasks.filter(
+      task =>
+        task.title.toLowerCase().includes(query) ||
+        task.description?.toLowerCase().includes(query)
     );
   }, [tasks, debouncedSearchQuery]);
 
-  const handleDeleteTask = async (id: string) => {
-    Alert.alert('Delete Task', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await taskService.deleteTask(id);
-            setTasks(tasks.filter(t => t._id !== id));
-            console.log('[HomeScreen] Task deleted:', id);
-          } catch (error) {
-            console.error('[HomeScreen] Failed to delete task:', error);
-            Alert.alert('Error', 'Failed to delete task');
-          }
-        },
-      },
-    ]);
+  const handleDeleteTask = (id: string) => {
+    confirmAction('Delete Task', 'Are you sure you want to delete this task?', async () => {
+      try {
+        await taskService.deleteTask(id);
+        setTasks(prev => prev.filter(t => t._id !== id));
+        console.log('[HomeScreen] Task deleted:', id);
+      } catch (error) {
+        console.error('[HomeScreen] Failed to delete task:', error);
+        Alert.alert('Error', 'Failed to delete task');
+      }
+    });
   };
 
-  const handleLogout = async () => {
-    Alert.alert('Logout', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/(auth)/login');
-        },
-      },
-    ]);
+  const handleLogout = () => {
+    confirmAction('Logout', 'Are you sure you want to log out?', async () => {
+      try {
+        await logout();
+        router.replace('/(auth)/login');
+      } catch (error) {
+        console.error('[HomeScreen] Logout error:', error);
+        router.replace('/(auth)/login');
+      }
+    });
   };
 
   if (loading && tasks.length === 0) {
@@ -121,9 +126,7 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <View>
-            <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.text }}>
-              Tasks
-            </Text>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.text }}>Tasks</Text>
             <Text style={{ fontSize: 14, color: colors.text, opacity: 0.6 }}>
               Hello, {user?.username}!
             </Text>
@@ -162,18 +165,15 @@ export default function HomeScreen() {
 
         {/* Status Filter */}
         <View style={{ flexDirection: 'row', marginBottom: 16, gap: 8 }}>
-          {statuses.map((status) => (
+          {statuses.map(status => (
             <TouchableOpacity
               key={status}
-              onPress={() => {
-                setSelectedStatus(status);
-              }}
+              onPress={() => setSelectedStatus(status)}
               style={{
                 paddingHorizontal: 14,
                 paddingVertical: 8,
                 borderRadius: 20,
-                backgroundColor:
-                  selectedStatus === status ? colors.primary : colors.card,
+                backgroundColor: selectedStatus === status ? colors.primary : colors.card,
                 borderWidth: 1,
                 borderColor: selectedStatus === status ? colors.primary : colors.border,
               }}
@@ -204,7 +204,7 @@ export default function HomeScreen() {
         ) : (
           <FlatList
             data={filteredTasks}
-            keyExtractor={(item) => item._id}
+            keyExtractor={item => item._id}
             renderItem={({ item }) => (
               <TaskCard
                 task={item}
