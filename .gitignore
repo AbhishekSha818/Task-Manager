@@ -9,3 +9,7 @@ dist/
 .idea/
 .expo/
 .expo-shared/
+
+# Generated native Android/iOS folders (use expo prebuild to regenerate)
+frontend/android/
+frontend/ios/
