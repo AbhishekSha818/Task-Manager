@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import { taskService } from '../../../services/api';
 import { Task } from '../../../types';
 import { LoadingSpinner } from '../../../components/LoadingSpinner';
+import { INPUT_STYLES, getInputStyle } from '../../../constants/inputStyles';
 
 export default function EditTaskScreen() {
   const { colors } = useTheme();
@@ -29,6 +30,17 @@ export default function EditTaskScreen() {
   const [initialLoading, setInitialLoading] = useState(true);
 
   const statuses: Array<'Pending' | 'In Progress' | 'Completed'> = ['Pending', 'In Progress', 'Completed'];
+
+  // Memoize input styles with theme colors
+  const titleInputStyle = useMemo(
+    () => getInputStyle(INPUT_STYLES.singleLine, colors, 15),
+    [colors]
+  );
+
+  const descriptionInputStyle = useMemo(
+    () => getInputStyle(INPUT_STYLES.multiLine, colors, 20),
+    [colors]
+  );
 
   useEffect(() => {
     const loadTask = async () => {
@@ -99,18 +111,9 @@ export default function EditTaskScreen() {
             placeholderTextColor={colors.text + '80'}
             value={title}
             onChangeText={setTitle}
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 8,
-              padding: 14,
-              marginBottom: 15,
-              color: colors.text,
-              fontSize: 16,
-              fontWeight: '500',
-            }}
+            style={titleInputStyle}
             editable={!loading}
+            autoComplete="off"
           />
 
           <TextInput
@@ -120,18 +123,9 @@ export default function EditTaskScreen() {
             onChangeText={setDescription}
             multiline
             numberOfLines={5}
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 8,
-              padding: 14,
-              marginBottom: 20,
-              color: colors.text,
-              fontSize: 14,
-              textAlignVertical: 'top',
-            }}
+            style={descriptionInputStyle}
             editable={!loading}
+            autoComplete="off"
           />
 
           <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 10 }}>

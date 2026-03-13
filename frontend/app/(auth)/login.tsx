@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Dimensions,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/api';
+import { INPUT_STYLES, getInputStyle } from '../../constants/inputStyles';
 
 export default function LoginScreen() {
   const { colors, themeLoaded } = useTheme();
@@ -24,37 +24,17 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const emailInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
 
-  // Memoize TextInput styles to prevent re-render shrinking
+  // Memoize input styles with theme colors
   const emailInputStyle = useMemo(
-    () => ({
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      padding: 12,
-      minHeight: 44,
-      width: '100%' as const,
-      marginBottom: 12,
-      color: colors.text,
-      fontSize: 14,
-    }),
+    () => getInputStyle(INPUT_STYLES.singleLine, colors, 12),
     [colors]
   );
 
   const passwordInputStyle = useMemo(
-    () => ({
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      padding: 12,
-      minHeight: 44,
-      width: '100%' as const,
-      marginBottom: 20,
-      color: colors.text,
-      fontSize: 14,
-    }),
+    () => getInputStyle(INPUT_STYLES.singleLine, colors, 20),
     [colors]
   );
 
@@ -143,6 +123,7 @@ export default function LoginScreen() {
           </Text>
 
           <TextInput
+            ref={emailInputRef}
             placeholder="Email"
             placeholderTextColor={colors.text + '80'}
             value={email}
@@ -150,9 +131,11 @@ export default function LoginScreen() {
             style={emailInputStyle}
             keyboardType="email-address"
             editable={!loading}
+            autoComplete="off"
           />
 
           <TextInput
+            ref={passwordInputRef}
             placeholder="Password"
             placeholderTextColor={colors.text + '80'}
             value={password}
@@ -160,6 +143,7 @@ export default function LoginScreen() {
             secureTextEntry
             style={passwordInputStyle}
             editable={!loading}
+            autoComplete="off"
           />
 
           <TouchableOpacity
