@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
@@ -59,15 +60,31 @@ export default function RegisterScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          alignItems: Platform.OS === 'web' ? 'center' : 'stretch',
+          backgroundColor: colors.background,
+        }}
         showsVerticalScrollIndicator={false}
       >
         <View
           style={{
-            flex: 1,
-            padding: 20,
+            width: Platform.OS === 'web' ? 400 : '100%',
+            padding: 24,
             justifyContent: 'center',
             backgroundColor: colors.background,
+            borderWidth: Platform.OS === 'web' ? 1 : 0,
+            borderColor: colors.border,
+            borderRadius: 12,
+            marginHorizontal: Platform.OS === 'web' ? 20 : 0,
+            ...(Platform.OS === 'web' && {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+              elevation: 8,
+            }),
           }}
         >
           <Text
@@ -105,6 +122,8 @@ export default function RegisterScreen() {
               borderColor: colors.border,
               borderRadius: 8,
               padding: 12,
+              minHeight: 44,
+              width: '100%',
               marginBottom: 12,
               color: colors.text,
               fontSize: 14,
@@ -124,6 +143,8 @@ export default function RegisterScreen() {
               borderColor: colors.border,
               borderRadius: 8,
               padding: 12,
+              minHeight: 44,
+              width: '100%',
               marginBottom: 12,
               color: colors.text,
               fontSize: 14,
@@ -143,6 +164,8 @@ export default function RegisterScreen() {
               borderColor: colors.border,
               borderRadius: 8,
               padding: 12,
+              minHeight: 44,
+              width: '100%',
               marginBottom: 12,
               color: colors.text,
               fontSize: 14,
@@ -162,6 +185,8 @@ export default function RegisterScreen() {
               borderColor: colors.border,
               borderRadius: 8,
               padding: 12,
+              minHeight: 44,
+              width: '100%',
               marginBottom: 20,
               color: colors.text,
               fontSize: 14,
